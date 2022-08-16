@@ -40,7 +40,7 @@ class CustomUserSerializer(UserSerializer):
         user = self.context['request'].user
         return (user.is_authenticated and Follow.objects.filter(
             user=self.context['request'].user,
-            author=obj.author,
+            author=obj,
         ).exists())
 
 
