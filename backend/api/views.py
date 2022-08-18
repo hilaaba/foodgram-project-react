@@ -7,19 +7,35 @@ from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 
-from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
-                            ShoppingCart, Tag)
-from users.models import User, Follow
+from recipes.models import (
+    Favorite,
+    Ingredient,
+    IngredientRecipe,
+    Recipe,
+    ShoppingCart,
+    Tag,
+)
+from users.models import Follow, User
 
 from .filters import IngredientSearchFilter, RecipesFilter
 from .pagination import LimitPageNumberPagination
-from .permissions import (AdminPermission, CurrentUserPermission,
-                          ReadOnlyPermission)
-from .serializers import (CustomPasswordSerializer, CustomUserCreateSerializer,
-                          CustomUserSerializer, FavoriteSerializer,
-                          FollowSerializer, IngredientSerializer,
-                          RecipeGetSerializer, RecipePostSerializer,
-                          ShoppingCartCreateDestroySerializer, TagSerializer)
+from .permissions import (
+    AdminPermission,
+    CurrentUserPermission,
+    ReadOnlyPermission
+)
+from .serializers import (
+    CustomPasswordSerializer,
+    CustomUserCreateSerializer,
+    CustomUserSerializer,
+    FavoriteSerializer,
+    FollowSerializer,
+    IngredientSerializer,
+    RecipeGetSerializer,
+    RecipePostSerializer,
+    ShoppingCartCreateDestroySerializer,
+    TagSerializer
+)
 
 
 class CustomUserViewSet(UserViewSet):

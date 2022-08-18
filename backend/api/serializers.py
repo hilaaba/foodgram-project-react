@@ -1,12 +1,33 @@
-from djoser.serializers import (PasswordSerializer, UserCreateSerializer,
-                                UserSerializer)
+from djoser.serializers import (
+    PasswordSerializer,
+    UserCreateSerializer,
+    UserSerializer
+)
 from drf_extra_fields.fields import Base64ImageField
-from rest_framework.serializers import SerializerMethodField, CharField, ModelSerializer, ListField, IntegerField, PrimaryKeyRelatedField, CurrentUserDefault, HiddenField, ReadOnlyField, ValidationError
 from rest_framework.generics import get_object_or_404
+from rest_framework.serializers import (
+    CharField,
+    CurrentUserDefault,
+    HiddenField,
+    IntegerField,
+    ListField,
+    ModelSerializer,
+    PrimaryKeyRelatedField,
+    ReadOnlyField,
+    SerializerMethodField,
+    ValidationError,
+)
 
-from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
-                            ShoppingCart, Tag, TagRecipe)
-from users.models import User, Follow
+from recipes.models import (
+    Favorite,
+    Ingredient,
+    IngredientRecipe,
+    Recipe,
+    ShoppingCart,
+    Tag,
+    TagRecipe
+)
+from users.models import Follow, User
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -39,7 +60,7 @@ class CustomUserSerializer(UserSerializer):
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
         return (user.is_authenticated and Follow.objects.filter(
-            user=self.context['request'].user,
+            user=user,
             author=obj,
         ).exists())
 
@@ -167,14 +188,16 @@ class RecipeGetSerializer(ModelSerializer):
         fields = '__all__'
 
     def get_is_favorited(self, obj):
-        return Favorite.objects.filter(
-            user=self.context['request'].user,
+        user = self.context['request'].user
+        return user.is_authenticated and Favorite.objects.filter(
+            user=user,
             favorite_recipe=obj,
         ).exists()
 
     def get_is_in_shopping_cart(self, obj):
-        return ShoppingCart.objects.filter(
-            user=self.context['request'].user,
+        user = self.context['request'].user
+        return user.is_authenticated and ShoppingCart.objects.filter(
+            user=user,
             recipe=obj,
         ).exists()
 
