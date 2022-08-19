@@ -25,7 +25,7 @@ from recipes.models import (
     Recipe,
     ShoppingCart,
     Tag,
-    TagRecipe
+    TagRecipe,
 )
 from users.models import Follow, User
 
@@ -114,18 +114,30 @@ class RecipePostSerializer(ModelSerializer):
         ingredients = validated_data.pop('ingredients')
         recipe = Recipe.objects.create(**validated_data)
 
-        for tag in tags:
-            TagRecipe.objects.create(tag=tag, recipe=recipe)
-
-        for ingredient in ingredients:
-            IngredientRecipe.objects.create(
+        TagRecipe.objects.bulk_create(
+            [TagRecipe(tag=tag, recipe=recipe) for tag in tags]
+        )
+        # for tag in tags:
+        #     TagRecipe.objects.create(tag=tag, recipe=recipe)
+        IngredientRecipe.objects.bulk_create(
+            [IngredientRecipe(
                 ingredient=get_object_or_404(
                     Ingredient,
                     id=ingredient.get('id'),
                 ),
                 amount=ingredient.get('amount'),
                 recipe=recipe,
-            )
+            ) for ingredient in ingredients]
+        )
+        # for ingredient in ingredients:
+        #     IngredientRecipe.objects.create(
+        #         ingredient=get_object_or_404(
+        #             Ingredient,
+        #             id=ingredient.get('id'),
+        #         ),
+        #         amount=ingredient.get('amount'),
+        #         recipe=recipe,
+        #     )
         return recipe
 
     def update(self, instance, validated_data):

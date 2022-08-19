@@ -21,13 +21,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'colorfield',
     'djoser',
     'django_filters',
-    'api',
+    'users',
     'core',
     'recipes',
-    'users',
-    'colorfield',
+    'api',
 ]
 
 MIDDLEWARE = [
@@ -108,6 +108,8 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
 }
+
+PAGE_SIZE = 6
 
 DJOSER = {
     'HIDE_USERS': False,
