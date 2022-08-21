@@ -3,4 +3,4 @@ from django.conf import settings
 
 
 class LimitPageNumberPagination(PageNumberPagination):
-    page_size = settings.PAGE_SIZE
+    page_size = settings.PAGINATION_PAGE_SIZE

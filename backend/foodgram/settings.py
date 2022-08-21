@@ -109,7 +109,7 @@ REST_FRAMEWORK = {
     ],
 }
 
-PAGE_SIZE = 6
+PAGINATION_PAGE_SIZE = 6
 
 DJOSER = {
     'HIDE_USERS': False,
