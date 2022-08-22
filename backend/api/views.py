@@ -243,8 +243,9 @@ class ShoppingCartDownloadAPIView(views.APIView):
                 else:
                     ingredients_and_amount[ingredient] = amount
         for ingredient, amount in ingredients_and_amount.items():
-            response.write(f'\n{ingredient.name}')
-            response.write((f' ({ingredient.measurement_unit})'))
-            response.write(f' - {amount}')
+            response.write(
+                f'\n{ingredient.name}'
+                f' ({ingredient.measurement_unit}) - {amount}'
+            )
         return response
 

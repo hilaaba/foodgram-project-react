@@ -109,6 +109,55 @@ class RecipePostSerializer(ModelSerializer):
             'cooking_time',
         )
 
+    def validate(self, data):
+        name = data.get('name')
+        if not name:
+            raise ValidationError(
+                {'name': 'Не заполнено название рецепта!'},
+            )
+        if self.context.get('request').method == 'POST':
+            user = self.context.get('request').user
+            if Recipe.objects.filter(author=user, name=name).exists():
+                raise ValidationError(
+                    {'name': 'Рецепт с таким названием у вас уже есть!'},
+                )
+
+        text = data.get('text')
+        if not text:
+            raise ValidationError({'text': 'Не заполнено описание рецепта!'})
+
+        ingredients = data.get('ingredients')
+        if not ingredients:
+            raise ValidationError({'ingredients': 'Выберите ингредиент!'})
+        ingredients_list = []
+        for ingredient in ingredients:
+            ingredient_id = ingredient['id']
+            if ingredient_id in ingredients_list:
+                raise ValidationError({
+                    'ingredients': 'Вы уже добавили этот ингредиент!',
+                })
+            ingredients_list.append(ingredient_id)
+
+        tags = data.get('tags')
+        if not tags:
+            raise ValidationError({
+                'tags': 'Нужно выбрать хотя бы один тег!',
+            })
+        tags_list = []
+        for tag in tags:
+            if tag in tags_list:
+                raise ValidationError({
+                    'tags': 'Теги должны быть уникальными!',
+                })
+            tags_list.append(tag)
+
+        cooking_time = data.get('cooking_time')
+        if int(cooking_time) <= 0:
+            raise ValidationError({
+                'cooking_time': 'Время приготовление должно быть больше нуля!',
+            })
+        return data
+
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
@@ -130,37 +179,23 @@ class RecipePostSerializer(ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
+        instance.tags.clear()
         tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
-        instance.image = validated_data.get('image', instance.image)
-        instance.name = validated_data.get('name', instance.name)
-        instance.text = validated_data.get('text', instance.text)
-        instance.cooking_time = validated_data.get(
-            'cooking_time',
-            instance.cooking_time,
-        )
-        instance.save()
-
-        TagRecipe.objects.filter(recipe=instance).delete()
-        for tag in tags:
-            TagRecipe.objects.create(
-                tag=get_object_or_404(
-                    Tag,
-                    id=tag.id),
-                recipe=instance,
-            )
+        instance.tags.set(tags)
 
         IngredientRecipe.objects.filter(recipe=instance).delete()
-        for ingredient in ingredients:
-            IngredientRecipe.objects.filter(recipe=instance).create(
+        ingredients = validated_data.pop('ingredients')
+        IngredientRecipe.objects.bulk_create(
+            [IngredientRecipe(
                 ingredient=get_object_or_404(
                     Ingredient,
                     id=ingredient.get('id'),
                 ),
                 amount=ingredient.get('amount'),
                 recipe=instance,
-            )
-        return instance
+            ) for ingredient in ingredients]
+        )
+        return super().update(instance, validated_data)
 
 
 class IngredientInRecipeGetSerializer(ModelSerializer):
