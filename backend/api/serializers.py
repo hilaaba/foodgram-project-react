@@ -112,50 +112,42 @@ class RecipePostSerializer(ModelSerializer):
     def validate(self, data):
         name = data.get('name')
         if not name:
-            raise ValidationError(
-                {'name': 'Не заполнено название рецепта!'},
-            )
+            raise ValidationError('Не заполнено название рецепта!')
         if self.context.get('request').method == 'POST':
             user = self.context.get('request').user
             if Recipe.objects.filter(author=user, name=name).exists():
                 raise ValidationError(
-                    {'name': 'Рецепт с таким названием у вас уже есть!'},
+                    'Рецепт с таким названием у вас уже есть!',
                 )
 
         text = data.get('text')
         if not text:
-            raise ValidationError({'text': 'Не заполнено описание рецепта!'})
+            raise ValidationError('Не заполнено описание рецепта!')
 
         ingredients = data.get('ingredients')
         if not ingredients:
-            raise ValidationError({'ingredients': 'Выберите ингредиент!'})
+            raise ValidationError('Выберите ингредиент!')
         ingredients_list = []
         for ingredient in ingredients:
             ingredient_id = ingredient['id']
             if ingredient_id in ingredients_list:
-                raise ValidationError({
-                    'ingredients': 'Вы уже добавили этот ингредиент!',
-                })
+                raise ValidationError('Вы добавили повторяющийся ингредиент!')
             ingredients_list.append(ingredient_id)
 
         tags = data.get('tags')
         if not tags:
-            raise ValidationError({
-                'tags': 'Нужно выбрать хотя бы один тег!',
-            })
+            raise ValidationError('Нужно выбрать хотя бы один тег!')
         tags_list = []
         for tag in tags:
             if tag in tags_list:
-                raise ValidationError({
-                    'tags': 'Теги должны быть уникальными!',
-                })
+                raise ValidationError('Теги должны быть уникальными!')
             tags_list.append(tag)
 
         cooking_time = data.get('cooking_time')
         if int(cooking_time) <= 0:
-            raise ValidationError({
-                'cooking_time': 'Время приготовление должно быть больше нуля!',
-            })
+            raise ValidationError(
+                'Время приготовление должно быть больше нуля!',
+            )
         return data
 
     def create(self, validated_data):

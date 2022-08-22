@@ -1,3 +1,4 @@
+from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -222,30 +223,23 @@ class ShoppingCartDownloadAPIView(views.APIView):
         return ShoppingCart.objects.filter(user=self.request.user)
 
     def get(self, request):
-        response = HttpResponse(content_type='text/plain')
+        ingredients = IngredientRecipe.objects.filter(
+            recipe__recipe_in_shopping_cart__user=request.user,
+        ).values(
+            'ingredient__name',
+            'ingredient__measurement_unit',
+        ).annotate(
+            total_amount=Sum('amount')
+        )
+        shopping_list = ['Список покупок: \n\n']
+        for ingredient in ingredients:
+            shopping_list.append(
+                f'{ingredient["ingredient__name"]} '
+                f'({ingredient["ingredient__measurement_unit"]}) - '
+                f'{ingredient["total_amount"]}\n'
+            )
+        response = HttpResponse(shopping_list, content_type='text/plain')
         response['Content-Disposition'] = (
             'attachment; filename="shopping_list.txt"'
         )
-        return self._create_shopping_list(self.get_queryset(), response)
-
-    def _create_shopping_list(self, queryset, response):
-        ingredients_and_amount = {}
-        response.write('Список продуктов:\n')
-        for item in queryset:
-            ingredients_recipe = IngredientRecipe.objects.filter(
-                recipe=item.recipe
-            )
-            for row in ingredients_recipe:
-                ingredient = row.ingredient
-                amount = row.amount
-                if ingredient in ingredients_and_amount:
-                    ingredients_and_amount[ingredient] += amount
-                else:
-                    ingredients_and_amount[ingredient] = amount
-        for ingredient, amount in ingredients_and_amount.items():
-            response.write(
-                f'\n{ingredient.name}'
-                f' ({ingredient.measurement_unit}) - {amount}'
-            )
         return response
-

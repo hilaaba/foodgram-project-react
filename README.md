@@ -12,6 +12,7 @@
 Документация по API:
 
 ## Технологии:
+```
 Python 3.8  
 Django 2.2.19  
 Django REST Framework 3.13.1  
@@ -20,6 +21,7 @@ PostgreSQL 12
 Docker 20.10.17
 Gunicorn 20.1.0  
 Nginx 1.19.3
+```
 
 ## Как запустить проект локально в docker-контейнерах:
 
@@ -36,7 +38,7 @@ cd foodgram-project-react
 Перейти в папку развёртывания инфраструктуры:
 
 ```bash
-cd ../infra
+cd infra/
 ```
 Шаблон наполнения env-файла:
 ```
@@ -65,13 +67,11 @@ docker-compose exec web python3 manage.py collectstatic --no-input
 ```
 
 Теперь проект доступен по адресу <http://127.0.0.1/>,  
-документация по API проекта - по адресу <http://127.0.0.1/api/docs/>.
 
 Заполнить данными таблицу ингредиентов можно командами:
 
 ```
-docker-compose exec web python3 manage.py load_data_to_db
-
+docker-compose exec web python3 manage.py loaddata ingredients.json
 ```
 
 ## Создать суперпользователя
