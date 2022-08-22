@@ -1,3 +1,4 @@
+from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -22,7 +23,7 @@ from .pagination import LimitPageNumberPagination
 from .permissions import (
     AdminPermission,
     CurrentUserPermission,
-    ReadOnlyPermission
+    ReadOnlyPermission,
 )
 from .serializers import (
     CustomPasswordSerializer,
@@ -34,7 +35,7 @@ from .serializers import (
     RecipeGetSerializer,
     RecipePostSerializer,
     ShoppingCartCreateDestroySerializer,
-    TagSerializer
+    TagSerializer,
 )
 
 
@@ -43,7 +44,7 @@ class CustomUserViewSet(UserViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return CustomUserCreateSerializer
-        elif self.action == 'set_password':
+        if self.action == 'set_password':
             return CustomPasswordSerializer
         return CustomUserSerializer
 
@@ -93,7 +94,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             context={'request': self.request}
         )
         return Response(
-            serializer.data, status=status.HTTP_201_CREATED
+            serializer.data, status=status.HTTP_201_CREATED,
         )
 
     def update(self, request, *args, **kwargs):
@@ -101,16 +102,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(
             instance,
             data=request.data,
-            partial=True
+            partial=True,
         )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         serializer = RecipeGetSerializer(
             instance=serializer.instance,
-            context={'request': self.request}
+            context={'request': self.request},
         )
         return Response(
-            serializer.data, status=status.HTTP_200_OK
+            serializer.data, status=status.HTTP_200_OK,
         )
 
     def perform_create(self, serializer):
@@ -131,7 +132,7 @@ class FollowListViewSet(mixins.ListModelMixin, FollowBaseViewSet):
 class FollowCreateDestroyViewSet(
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
-    FollowBaseViewSet
+    FollowBaseViewSet,
 ):
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -141,16 +142,15 @@ class FollowCreateDestroyViewSet(
     def perform_create(self, serializer):
         serializer.save(
             user=self.request.user,
-            author=get_object_or_404(
-                User, id=self.kwargs.get('user_id')
-            ))
+            author=get_object_or_404(User, id=self.kwargs.get('user_id')),
+        )
 
     @action(methods=['delete'], detail=True)
     def delete(self, request, user_id):
         get_object_or_404(
             Follow,
             user=request.user,
-            author_id=user_id
+            author_id=user_id,
         ).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -174,8 +174,10 @@ class FavoriteViewSet(
         serializer.save(
             user=self.request.user,
             favorite_recipe=get_object_or_404(
-                Recipe, id=self.kwargs.get('recipe_id')
-            ))
+                Recipe,
+                id=self.kwargs.get('recipe_id'),
+            )
+        )
 
     @action(methods=['delete'], detail=True)
     def delete(self, request, recipe_id):
@@ -189,7 +191,7 @@ class FavoriteViewSet(
 class ShoppingCartCreateDestroyViewSet(
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
+    viewsets.GenericViewSet,
 ):
     queryset = ShoppingCart.objects.all()
     serializer_class = ShoppingCartCreateDestroySerializer
@@ -202,16 +204,16 @@ class ShoppingCartCreateDestroyViewSet(
     def perform_create(self, serializer):
         serializer.save(
             user=self.request.user,
-            recipe=get_object_or_404(
-                Recipe, id=self.kwargs.get('recipe_id')
-            ))
+            recipe=get_object_or_404(Recipe, id=self.kwargs.get('recipe_id')),
+        )
 
     @action(methods=['delete'], detail=True)
     def delete(self, request, recipe_id):
         get_object_or_404(
             ShoppingCart,
             user=request.user,
-            recipe_id=recipe_id).delete()
+            recipe_id=recipe_id,
+        ).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -221,29 +223,23 @@ class ShoppingCartDownloadAPIView(views.APIView):
         return ShoppingCart.objects.filter(user=self.request.user)
 
     def get(self, request):
-        response = HttpResponse(content_type='text/plain')
+        ingredients = IngredientRecipe.objects.filter(
+            recipe__recipe_in_shopping_cart__user=request.user,
+        ).values(
+            'ingredient__name',
+            'ingredient__measurement_unit',
+        ).annotate(
+            total_amount=Sum('amount')
+        )
+        shopping_list = ['Список покупок: \n\n']
+        for ingredient in ingredients:
+            shopping_list.append(
+                f'{ingredient["ingredient__name"]} '
+                f'({ingredient["ingredient__measurement_unit"]}) - '
+                f'{ingredient["total_amount"]}\n'
+            )
+        response = HttpResponse(shopping_list, content_type='text/plain')
         response['Content-Disposition'] = (
             'attachment; filename="shopping_list.txt"'
         )
-        return self._create_shopping_list(self.get_queryset(), response)
-
-    def _create_shopping_list(self, queryset, response):
-        ingredients_and_amount = {}
-        response.write('Список продуктов:\n')
-        for item in queryset:
-            ingredients_recipe = IngredientRecipe.objects.filter(
-                recipe=item.recipe
-            )
-            for row in ingredients_recipe:
-                ingredient = row.ingredient
-                amount = row.amount
-                if ingredient in ingredients_and_amount:
-                    ingredients_and_amount[ingredient] += amount
-                else:
-                    ingredients_and_amount[ingredient] = amount
-        for ingredient, amount in ingredients_and_amount.items():
-            response.write(f'\n{ingredient.name}')
-            response.write((f' ({ingredient.measurement_unit})'))
-            response.write(f' - {amount}')
         return response
-

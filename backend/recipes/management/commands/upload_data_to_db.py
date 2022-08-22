@@ -7,15 +7,15 @@ from django.core.management.base import BaseCommand
 from recipes.models import Ingredient
 
 
-def ingredients_create(row):
+def load_ingredients(name, measurement_unit):
     Ingredient.objects.get_or_create(
-        name=row[0],
-        measurement_unit=row[1],
+        name=name,
+        measurement_unit=measurement_unit,
     )
 
 
 filename_func_names = {
-    'ingredients.csv': ingredients_create,
+    'ingredients.csv': load_ingredients,
 }
 
 
@@ -26,6 +26,6 @@ class Command(BaseCommand):
             with open(path, 'r', encoding='utf-8') as file:
                 data = csv.reader(file)
                 next(data)
-                for row in data:
-                    func(row)
+                for name, measurement_unit in data:
+                    func(name, measurement_unit)
                 print(f'Added {filename}')

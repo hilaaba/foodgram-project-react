@@ -34,7 +34,7 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.is_superuser or self.access_level == 'admin'
+        return self.is_superuser or self.access_level == ADMIN
 
 
 class Follow(models.Model):
