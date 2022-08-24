@@ -68,5 +68,3 @@ class Follow(models.Model):
             f'user: {self.user.username}, '
             f'author: {self.author.username}'
         )
-
-

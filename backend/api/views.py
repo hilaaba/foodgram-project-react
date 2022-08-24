@@ -17,7 +17,6 @@ from recipes.models import (
     Tag,
 )
 from users.models import Follow, User
-
 from .filters import IngredientSearchFilter, RecipesFilter
 from .pagination import LimitPageNumberPagination
 from .permissions import (
