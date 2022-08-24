@@ -1,32 +1,15 @@
-from djoser.serializers import (
-    PasswordSerializer,
-    UserCreateSerializer,
-    UserSerializer
-)
+from djoser.serializers import (PasswordSerializer, UserCreateSerializer,
+                                UserSerializer)
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework.generics import get_object_or_404
-from rest_framework.serializers import (
-    CharField,
-    CurrentUserDefault,
-    HiddenField,
-    IntegerField,
-    ListField,
-    ModelSerializer,
-    PrimaryKeyRelatedField,
-    ReadOnlyField,
-    SerializerMethodField,
-    ValidationError,
-)
+from rest_framework.serializers import (CharField, CurrentUserDefault,
+                                        HiddenField, IntegerField, ListField,
+                                        ModelSerializer,
+                                        PrimaryKeyRelatedField, ReadOnlyField,
+                                        SerializerMethodField, ValidationError)
 
-from recipes.models import (
-    Favorite,
-    Ingredient,
-    IngredientRecipe,
-    Recipe,
-    ShoppingCart,
-    Tag,
-    TagRecipe,
-)
+from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                            ShoppingCart, Tag, TagRecipe)
 from users.models import Follow, User
 
 
@@ -109,7 +92,7 @@ class RecipePostSerializer(ModelSerializer):
             'cooking_time',
         )
 
-    def validate(self, data):
+    def validate(self, data):  # noqa: C901
         name = data.get('name')
         if not name:
             raise ValidationError('Не заполнено название рецепта!')
