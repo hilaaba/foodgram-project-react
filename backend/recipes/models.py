@@ -28,7 +28,7 @@ class Tag(models.Model):
         verbose_name_plural = 'Теги'
 
     def __str__(self):
-        return(
+        return (
             f'name: {self.name}, '
             f'slug: {self.slug}, '
             f'color in HEX: {self.color}'
@@ -53,7 +53,7 @@ class Ingredient(models.Model):
         verbose_name_plural = 'Ингредиенты'
 
     def __str__(self):
-        return(
+        return (
             f'name: {self.name}, '
             f'measurement unit: {self.measurement_unit}'
         )
@@ -99,7 +99,7 @@ class Recipe(CreateModel):
             f'description: {self.text[:15]}, '
             f'ingredients: {self.ingredients}, '
             f'tags: {self.tags}, '
-            f'cooking time: {self.cooking_time}',
+            f'cooking time: {self.cooking_time}'
         )
 
 
@@ -133,6 +133,10 @@ class IngredientRecipe(models.Model):
         verbose_name='Количество ингредиента'
     )
 
+    class Meta:
+        verbose_name = 'Ингредиент рецепта'
+        verbose_name_plural = 'Ингредиенты рецептов'
+
     def __str__(self):
         return f'{self.ingredient.name} -- {self.recipe.name}, {self.amount}'
 
@@ -165,7 +169,7 @@ class Favorite(models.Model):
     def __str__(self):
         return (
             f'user: {self.user.username}, '
-            f'favourite recipe: {self.favorite_recipe.name}',
+            f'favourite recipe: {self.favorite_recipe.name}'
         )
 
 
@@ -192,6 +196,7 @@ class ShoppingCart(models.Model):
             name='unique recipe in shopping cart'
         )
         verbose_name = 'Список покупок'
+        verbose_name_plural = 'Список покупок'
 
     def __str__(self):
         return (

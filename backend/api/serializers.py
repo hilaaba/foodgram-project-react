@@ -1,15 +1,18 @@
-from djoser.serializers import (PasswordSerializer, UserCreateSerializer,
-                                UserSerializer)
+from djoser.serializers import (
+    PasswordSerializer, UserCreateSerializer, UserSerializer,
+)
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework.generics import get_object_or_404
-from rest_framework.serializers import (CharField, CurrentUserDefault,
-                                        HiddenField, IntegerField, ListField,
-                                        ModelSerializer,
-                                        PrimaryKeyRelatedField, ReadOnlyField,
-                                        SerializerMethodField, ValidationError)
+from rest_framework.serializers import (
+    CharField, CurrentUserDefault, HiddenField, IntegerField, ListField,
+    ModelSerializer, PrimaryKeyRelatedField, ReadOnlyField,
+    SerializerMethodField, ValidationError,
+)
 
-from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
-                            ShoppingCart, Tag, TagRecipe)
+from recipes.models import (
+    Favorite, Ingredient, IngredientRecipe, Recipe, ShoppingCart, Tag,
+    TagRecipe,
+)
 from users.models import Follow, User
 
 
@@ -92,8 +95,7 @@ class RecipePostSerializer(ModelSerializer):
             'cooking_time',
         )
 
-    def validate(self, data):  # noqa: C901
-        name = data.get('name')
+    def validate_name(self, name):
         if not name:
             raise ValidationError('Не заполнено название рецепта!')
         if self.context.get('request').method == 'POST':
@@ -102,12 +104,14 @@ class RecipePostSerializer(ModelSerializer):
                 raise ValidationError(
                     'Рецепт с таким названием у вас уже есть!',
                 )
+        return name
 
-        text = data.get('text')
+    def validate_text(self, text):
         if not text:
             raise ValidationError('Не заполнено описание рецепта!')
+        return text
 
-        ingredients = data.get('ingredients')
+    def validate_ingredients(self, ingredients):
         if not ingredients:
             raise ValidationError('Выберите ингредиент!')
         ingredients_list = []
@@ -116,8 +120,9 @@ class RecipePostSerializer(ModelSerializer):
             if ingredient_id in ingredients_list:
                 raise ValidationError('Вы добавили повторяющийся ингредиент!')
             ingredients_list.append(ingredient_id)
+        return ingredients
 
-        tags = data.get('tags')
+    def validate_tags(self, tags):
         if not tags:
             raise ValidationError('Нужно выбрать хотя бы один тег!')
         tags_list = []
@@ -125,13 +130,14 @@ class RecipePostSerializer(ModelSerializer):
             if tag in tags_list:
                 raise ValidationError('Теги должны быть уникальными!')
             tags_list.append(tag)
+        return tags
 
-        cooking_time = data.get('cooking_time')
+    def validate_cooking_time(self, cooking_time):
         if int(cooking_time) <= 0:
             raise ValidationError(
                 'Время приготовление должно быть больше нуля!',
             )
-        return data
+        return cooking_time
 
     def create(self, validated_data):
         tags = validated_data.pop('tags')
